@@ -28,6 +28,7 @@ Používáni:
    -  a prijima data po RS lince a posilat do domoticz
 
 
-# TODO  - dodelat schema zapojeni
+# TODO  
+       - dodelat schema zapojeni
        - mozna podpora MQTT
        - config.dat
