@@ -19,7 +19,6 @@ dzurl = "http://192.168.1.107:1080/"
 start_time = time.time()
 last_time = start_time
 tsend = 5
-dzpass = "username=bHVrYXM==&password=QWRtaW5hODMz="
 print ("RS reading started...")
 
 #seru = serial.Serial('/dev/ttyS0', baudrate=9600,
@@ -51,9 +50,9 @@ else:
 while True:
         now = time.time()
         akt_time = now
-        i = seru.readline()
-        a = i.hex()
-        print (a)
+        #i = seru.readline()
+        #a = i.hex()
+        #print (a)
 #---- otestuju dostupnost domoticz pokud neni pokracuju ve smyccse ----
         dzonline = dz_online(dzurl)
         print (dzonline)
@@ -69,9 +68,9 @@ while True:
                     print (valu)
 
 
-        #a = "0226FFFA169E572D169F4B28157C0021157D00D2157E0032166E02941616002D158B00001681F83015CD00021620022516210002158900001587000015880000159B000001F60000028E0000029800000299000002450000157F00011610000002FC000001F9000003110000031200000288000002183A22"
-        #a = a.upper()
-        #a.strip()
+        a = "0226FFFA169E572D169F4B28157C0021157D00D2157E0032166E02941616002D158B00001681F83015CD00021620022516210002158900001587000015880000159B000001F60000028E0000029800000299000002450000157F00011610000002FC000001F9000003110000031200000288000002183A22"
+        a = a.upper()
+        a.strip()
         #print(a)
         #print (len(a))
         crc_cajk = porovnej_crc(a)
