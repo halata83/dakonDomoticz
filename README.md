@@ -26,6 +26,8 @@ Používáni:
    - v ServiceDakon.py upravime promenou dzurl na sdresu na ktere nam bezi domoticz
    - spustime ServiceDakon.py. Pokud program najde setup.dat nacte dostupna zarízeni, overi dostupnost domoticz a zacne cist data z domoticz, posila do kotle
    -  a prijima data po RS lince a posilat do domoticz
-#TODO  - dodelat schema zapojeni
+
+
+# TODO  - dodelat schema zapojeni
        - mozna podpora MQTT
        - config.dat
