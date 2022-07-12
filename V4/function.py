@@ -413,7 +413,7 @@ def searchHWIdx(dzurl):
             idx = json_object["result"][i]["idx"]
    return idx
 
-def loadDataFromSerial():
+def loadDataFromSerial(seru):
    i = seru.readline()
    a = i.hex()
    a = a.upper()
@@ -464,7 +464,13 @@ def zpracuj_prijatou_Mqtt_zpravu(zprava,co):
       for i in co:
          if (i.name in data):
             print (data[i.name])
-            i.value = data[i.name]
+            try:
+               i.value = int(data[i.name])
+            except ValueError as verr:
+               print ("prijata zprava nejde prevezt na int!", data[i.name], verr)
+            except Exception as ex:
+               print ("data nelze prevezt na int")
+               
 
 def zpracuj_prijatou_DzMqtt_zpravu(zprava,co):
    import json
@@ -483,5 +489,8 @@ def zpracuj_prijatou_DzMqtt_zpravu(zprava,co):
                   data["svalue1"] = 1
                if (data["svalue1"] == "30"):
                   data["svalue1"] = 0   
+            if (data["stype"] == "SetPoint"):
+               data["svalue1"] = float(data["svalue1"])
+               data["svalue1"] = int(data["svalue1"])         
             i.value = data["svalue1"]
             print (i.value)
