@@ -24,7 +24,9 @@ config = configparser.ConfigParser()
 config.read(configfile)
 DomoticzUrl = config["DEFAULT"]["domoticzurl"]
 useDZhttp = str2bool(config["DEFAULT"]["useDomoticzHttpApi"])
+test = str2bool(config["DEFAULT"]["test"])
 yesorno = input("spustenim se vymaže existujic soubor setup.dat a vytvoří se novy. Chcete Pokracovat? A/N: ")
+
 if (any(yesorno.lower() == f for f in["no", "n","ne"])):
     print ("ok, končime ")
     exit()
@@ -35,18 +37,21 @@ if (exists(configfile) != True):
     print ("nenešel jsem config.ini")
     exit()
 print ("prijimam data po RS...")
+if (test == False):
+    seru = serial.Serial('/dev/ttyS0', baudrate=9600,
+    parity=serial.PARITY_NONE,
+    stopbits=serial.STOPBITS_ONE,
+    bytesize=serial.EIGHTBITS, timeout = 1)
 
-#seru = serial.Serial('/dev/ttyS0', baudrate=9600,
-#                    parity=serial.PARITY_NONE,
-#                    stopbits=serial.STOPBITS_ONE,
-#                    bytesize=serial.EIGHTBITS, timeout = 1)
 
 while True:
     print ("Hledám nová zařízeni...")
-    #i = seru.readline()
-    #a = i.hex()
-    a = "0226FFFA169E572D169F4B28157C0021157D00D2157E0032166E02941616002D158B00001681F83015CD00021620022516210002158900001587000015880000159B000001F60000028E0000029800000299000002450000157F00011610000002FC000001F9000003110000031200000288000002183A22"
-    a = a.upper()
+    if (test == False):
+        i = seru.readline()
+        a = i.hex()
+    else:
+        a = "0226FFFA169E572D169F4B28157C0021157D00D2157E0032166E02941616002D158B00001681F83015CD00021620022516210002158900001587000015880000159B000001F60000028E0000029800000299000002450000157F00011610000002FC000001F9000003110000031200000288000002183A22"
+        a = a.upper()
     crc_cajk = porovnej_crc(a)
     if ( crc_cajk != True ):
         #print ("spatne crc")

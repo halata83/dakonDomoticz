@@ -1,6 +1,7 @@
 from logging import exception
 from tridy import *
 from function import *
+import globals
 def str2bool(v):
   return v.lower() in ("yes", "true", "t", "1")
 
@@ -118,17 +119,6 @@ def LoadDataFromString(streamdata, pozice,seznam):
    _dzload = ""
    return (_para,_pop,_typ,_idx,_sndTo,_dzload)
 
-#def (streamdata, pozice):
-   #nactu zarizeni z dat z kotle
-#   _para = streamdata[pozice:pozice+4]
-#   dt = seznam[streamdata[pozice:pozice+4]]
-#   dt = dt.split(",")
-#   _pop = dt[0]
-#   _typ = dt[1]
-#   _idx = dt[2]
-#   _sndTo = dt[3]
-#   return (_para,_pop,_typ,_idx,_sndTo)
-
 def writeFile(filepatch,data):
    f = open(filepatch, "a")
    f.write(data)
@@ -157,6 +147,69 @@ def posliDataPriZmene(co):
             #print ("posilam data:", tmpdata)
             send_data_to_domoticz(tmpdata)
             i.LastValue = i.value
+
+def posliDataMQTTPriZmene(client,topic,msg):
+            sendtopic = topic + "/state"
+            publish(client,sendtopic,msg)
+
+def posliDzMQTTPriZmene(co,client,topic):
+   for i in co:
+      if (i.send == "True"):
+         if (i.LastValue != i.value):
+            msg = i.dzMqttCmd()
+            publish(client,topic,msg)
+            i.LastValue = i.value
+
+def create_json_str (co):
+   data = {}
+   for i in co:
+      if (i.send == "True"):
+         send_data = i.value
+         if (i.type == "switch"):
+            if (i.value == 0 ):
+               send_data = "Off"
+            if (i.value == 1 ):
+               send_data = "On"
+         if (i.para == "15CD"):
+            if (i.value == 3):
+               send_data  = "leto"
+            if (i.value == 2):
+               send_data  = "paralelni cerpadla"
+            if (i.value == 1):
+               send_data  = "Priorita bojler"
+            if (i.value == 0):
+               send_data = "vytapeni domu"
+         if (i.para == "157C"):
+            if (i.value == 2):
+               send_data = "Topeni"
+            elif (i.value == 130):
+               send_data = "Dohled"
+            elif (i.value == 80):
+               send_data = "Udrzovani"
+            elif (i.value == 82):
+               send_data = "Dohled"
+            elif (i.value == 9):
+               send_data = "Alarm_Teplota_Neroste"
+            elif (i.value == 14):
+               send_data = "Alarm:vadny_Snimac_CO"
+            elif (i.value == 10):
+               send_data = "Alarm:vadny_snimac_podavace" 
+            elif (i.value == 49):
+               send_data = "Roztopeni"  
+            elif (i.value == 39):
+               send_data = "Alarm 27"
+            elif (i.value == 41):
+               send_data = "Alarm 29"  
+            elif (i.value == 33):
+               send_data = "Dohorely"  
+            else:
+               send_data = "Alarm: "  + str(i.value)
+         data[i.name] = send_data
+         
+   #json_data = json.dumps(data)
+   data = str(data)
+   data = data.replace("\'", "\"")
+   return data
 
 def upravData(odkud,datahex,hexpara):
    for i in odkud:
@@ -211,11 +264,29 @@ def posli_data_5m(akt_time,last_send_time,time_send,co):
       last_send_time = akt_time
    return last_send_time
 
+def posli_mqtt_data_5m(akt_time,last_send_time,time_send,topic,client,msg):
+   time_diff = int(akt_time) - int(last_send_time)
+   if (time_diff >= time_send):
+      sendtopic = topic + "/state"
+      publish(client,sendtopic,msg)
+      last_send_time = akt_time
+   return last_send_time
+
+def posli_dz_mqtt_data_5m(akt_time,last_send_time,time_send,co,client,topic):
+   time_diff = int(akt_time) - int(last_send_time)
+   if (time_diff >= time_send):
+      for i in co:
+         if (i.send == "True"):
+            msg = i.dzMqttCmd()
+            publish(client,topic,msg)
+      last_send_time = akt_time
+   return last_send_time
+
 def dz_online(dzurl):
    import urllib.request as ur
    dzonline = True
    try:
-      page = ur.urlopen(dzurl+"json.htm?username=bHVrYXM==&password=QWRtaW5hODMz=")
+      page = ur.urlopen(dzurl+"json.htm")
    except ur.HTTPError as err:
       if err.code == 404:
          print("stranka nenalezena!")
@@ -264,7 +335,7 @@ def createDomoticzDevice(dzurl,senzorname,sensotype):
    senzorname = "DKM " + senzorname
    htmlsenzorname = senzorname.replace(" ", "%20")
    if (sensotype == "temp"):
-      senstyp = "82"
+      senstyp = "80"
       domoticzurl = dzurl + "json.htm?type=createvirtualsensor&idx="+ str(HWIdx) +"&sensorname=" + htmlsenzorname + "&sensortype=" + str(senstyp)
    elif (sensotype == "switch"):
       senstyp = "244"
@@ -341,3 +412,76 @@ def searchHWIdx(dzurl):
          if (json_object["result"][i]["Type"] == 15):
             idx = json_object["result"][i]["idx"]
    return idx
+
+def loadDataFromSerial():
+   i = seru.readline()
+   a = i.hex()
+   a = a.upper()
+   a.strip()
+   print (a)
+   return a
+
+# ---------------- mqtt function -------------------------------------------
+from paho.mqtt import client as mqtt_client
+def connect_mqtt(client_id,username,password,broker,port):
+   #from paho.mqtt import client as mqtt_client
+   def on_connect(client, userdata, flags, rc):
+      if rc == 0:
+         print("Connected to MQTT Broker!")
+      else:
+         print("Failed to connect, return code %d\n", rc)
+
+   client = mqtt_client.Client(client_id)
+   if (username != "") or (password != ""):
+      client.username_pw_set(username, password)
+   client.on_connect = on_connect
+   client.connect(broker, port)
+   return client
+
+def publish(client,topic,msg):
+   result = client.publish(topic, msg)
+   # result: [0, 1]
+   status = result[0]
+   if status == 0:
+      print(f"Send `{msg}` to topic `{topic}`")
+   else:
+      print(f"Failed to send message to topic {topic}")
+   
+
+def subscribe(client: mqtt_client,setTopic):
+   client.subscribe(setTopic)
+   client.on_message = on_message
+
+def on_message(client, userdata, msg):
+   print("Received", msg.payload.decode(), "from" ,msg.topic, "topic")
+   globals.mqtt_sub_msg = msg.payload.decode()
+    
+#----------------------------------------------------------------------------
+def zpracuj_prijatou_Mqtt_zpravu(zprava,co):
+   import json
+   if (zprava != ""):
+      data = json.loads(zprava)
+      for i in co:
+         if (i.name in data):
+            print (data[i.name])
+            i.value = data[i.name]
+
+def zpracuj_prijatou_DzMqtt_zpravu(zprava,co):
+   import json
+   if (zprava != ""):
+      data = json.loads(zprava)
+      idx = str(data["idx"])
+      for i in co:
+         if (i.idx == idx):
+            print (data["name"])
+            if (data["stype"] == "Selector Switch"):
+               if (data["svalue1"] == "0"):
+                  data["svalue1"] = 3
+               if (data["svalue1"] == "10"):
+                  data["svalue1"] = 2
+               if (data["svalue1"] == "20"):
+                  data["svalue1"] = 1
+               if (data["svalue1"] == "30"):
+                  data["svalue1"] = 0   
+            i.value = data["svalue1"]
+            print (i.value)
