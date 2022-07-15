@@ -489,6 +489,7 @@ def zpracuj_prijatou_DzMqtt_zpravu(zprava,co):
                   data["svalue1"] = 1
                if (data["svalue1"] == "30"):
                   data["svalue1"] = 0   
+                  
             if (data["stype"] == "SetPoint"):
                data["svalue1"] = float(data["svalue1"])
                data["svalue1"] = int(data["svalue1"])         
