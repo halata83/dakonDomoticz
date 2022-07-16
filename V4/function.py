@@ -51,19 +51,25 @@ def cal_crc(hexdata):
 
 
 def mess_for_send(CMDPAR,VALPAR):
-        PARVALDEC = int(VALPAR)
-        PARVALBYT = PARVALDEC.to_bytes(2,'big')
-        STX = "0226"
-        ETX = "0218"
-        FOR = "FFF4"
-        PARVAL = PARVALBYT.hex()
-        PARVAL = PARVAL.upper()
-        CRC = ""
-        message = STX + FOR + CMDPAR + PARVAL + ETX + CRC
-        CRC = cal_crc(message)
-        data = message + CRC
-        data = bytes.fromhex(data)
-        return data
+      PARVALDEC = int(VALPAR)
+      PARVALBYT = PARVALDEC.to_bytes(2,'big')
+      if (CMDPAR == "1616"):
+         CMDPAR = "028E"
+      if (CMDPAR == "157E"):
+         CMDPAR = "01F6"
+      if (CMDPAR == "15CD"):
+         CMDPAR = "0245"
+      STX = "0226"
+      ETX = "0218"
+      FOR = "FFF4"
+      PARVAL = PARVALBYT.hex()
+      PARVAL = PARVAL.upper()
+      CRC = ""
+      message = STX + FOR + CMDPAR + PARVAL + ETX + CRC
+      CRC = cal_crc(message)
+      data = message + CRC
+      data = bytes.fromhex(data)
+      return data
 
 def load_dz_data(urlcmd,parametr):
          import urllib.request as ur
@@ -93,7 +99,7 @@ def send_data_to_domoticz(cmdurl):
            import urllib.request as ur
            import urllib.parse as par
            cmd = cmdurl
-           print ("posilam data do domoticz", cmd)
+           #print ("posilam data do domoticz", cmd)
            try:
                page = ur.urlopen(cmd)
            except ur.HTTPError as err:
@@ -144,7 +150,7 @@ def posliDataPriZmene(co):
       if (i.send == "True"):
          if (i.LastValue != i.value):
             tmpdata = i.dzCmdUrl()
-            #print ("posilam data:", tmpdata)
+            print ("posilam data:",str(i.name).ljust(30),"====>",i.value)
             send_data_to_domoticz(tmpdata)
             i.LastValue = i.value
 
@@ -258,8 +264,8 @@ def posli_data_5m(akt_time,last_send_time,time_send,co):
       for i in co:
          if (i.send == "True"):
             tmpdata = i.dzCmdUrl()
-            print ("posilam data:", tmpdata)
-            #send_data_to_domoticz(tmpdata)
+            print ("posilam data:",str(i.name).ljust(30),"====>", i.value)
+            send_data_to_domoticz(tmpdata)
             i.LastValue = i.value
       last_send_time = akt_time
    return last_send_time
@@ -489,9 +495,23 @@ def zpracuj_prijatou_DzMqtt_zpravu(zprava,co):
                   data["svalue1"] = 1
                if (data["svalue1"] == "30"):
                   data["svalue1"] = 0   
-                  
+
             if (data["stype"] == "SetPoint"):
                data["svalue1"] = float(data["svalue1"])
                data["svalue1"] = int(data["svalue1"])         
             i.value = data["svalue1"]
             print (i.value)
+
+def load_rs_data(rsdata):
+   split_string = "0218"
+   data = []
+   find = True
+   i = 0
+   while find:
+      idx = rsdata.find(split_string)
+      if (idx != -1):
+         data.append(rsdata[0:idx + 8])
+         rsdata = rsdata[idx + 8:len(rsdata)]
+      else:
+         find = False
+   return data

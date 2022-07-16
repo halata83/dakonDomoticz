@@ -19,6 +19,8 @@ class device:
             request = self.url + "json.htm?type=command&param=udevice&idx=" + str(self.idx) + "&nvalue=0&svalue="  + str(self.value)
         if (self.type == "proc"):
             request = self.url + "json.htm?type=command&param=udevice&idx=" + str(self.idx) + "&nvalue=0&svalue="  + str(self.value)
+        if (self.type == "text"):
+            request = self.url + "json.htm?type=command&param=udevice&idx=" + str(self.idx) + "&nvalue=0&svalue="  + str(self.value)
         if (self.type == "switch"):
             if (self.value == 0 ):
                 cmdpar = "Off"

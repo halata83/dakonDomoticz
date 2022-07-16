@@ -114,14 +114,19 @@ while True:
         now = time.time()
         akt_time = now
         if (test == False):
+            seru.flushInput
             i = seru.readline()
             a = i.hex()
             a = a.upper()
             a = a.strip()
+            b = load_rs_data(a)
         else:
+            print ("testovani")
             a = "0226FFFA169E572D169F4B28157C0021157D00D2157E0032166E02941616002D158B00001681F83015CD00021620022516210002158900001587000015880000159B000001F60000028E0000029800000299000002450000157F00011610000002FC000001F9000003110000031200000288000002183A22"
+            a = "0226FFF816EF000116C2000016F9000016EF000216C2000016F9000016F1000016F2000002185F190226FFF4169E572D169F4B28157C0021157D00D2157E0032166E02C61616002D158B00001681F83015CD00021620171716210003158900001587000015880000159B000001F60000028E000002980000029900000245000002189F020226FFF415A7001516FF000616F800C815B700D21684000002182325"
             a = a.upper()
             a = a.strip()
+            b = load_rs_data(a)
 #---- otestuju dostupnost domoticz  pokud neni pokracuju ve smyccse ----
 #---- pokud pouzivam http api domoticz použivam toto:
         if (useDZhttp == True):
@@ -136,15 +141,19 @@ while True:
                         i.mess_for_dz = mess_for_send(i.para,i.value)
                         if (i.LastValue != i.value):
                             i.LastValue = i.value
-                            print ("odesilam data TV do kotle:", i.value)
+                            print ("odesilam data TV do kotle:", i.value, i.mess_for_dz.hex())
                             if (test == False):
+                                #seru.flushInput()
+                                #seru.flushOutput()
+                                #seru.close()
+                                #seru.open()
                                 seru.write(i.mess_for_dz)
                     if (i.type == "selswitch"):
                         i.value = load_dz_data(dzurl+"json.htm?type=devices&rid="+str(i.idx),"Level")
                         i.mess_for_dz = mess_for_send(i.para,i.value)
                         if (i.LastValue != i.value):
                             i.LastValue = i.value
-                            print ("odesilam data TV do kotle:", i.value)
+                            print ("odesilam data TV do kotle:", i.value, i.mess_for_dz.hex())
                             if (test == False):
                                 seru.write(i.mess_for_dz)
 # --------------- a pokud pouoživam MQTT jede tohle -----------------------------------                                
@@ -158,22 +167,28 @@ while True:
                         if (test == False):
                             seru.write(i.mess_for_dz)
 #-- zkontroluu CRC prijatych dat když nesouhlasi pokracuju dalsim ctenim ----------------------                                                    
-        crc_cajk = porovnej_crc(a)
-        if ( crc_cajk != True ):
-            print ("spatne crc")
-            continue
-#-- upravim data do nějakeho normalniho formatu
-        y = 0
-        for x in range(len(a)):
-            parametr = a[y:y+4]
-            data = a[y+4:y+8]
-            #dataDec = int(a[y+4:y+8],16)
-            upravData(zarizeni,data,parametr)
-            y = y + 8
-            if (y >= len(a)):
-                break
-        #zobrazData(zarizeni)
-# když používam http api posilam data takhle
+        index = 0
+        for i in b:
+            a = b[index]
+            #print (a)
+            crc_cajk = porovnej_crc(a)
+            if ( crc_cajk != True ):
+                print ("spatne crc")
+                index += 1 
+                continue
+            #-- upravim data do nějakeho normalniho formatu
+            y = 0
+            for x in range(len(a)):
+                parametr = a[y:y+4]
+                data = a[y+4:y+8]
+                #dataDec = int(a[y+4:y+8],16)
+                upravData(zarizeni,data,parametr)
+                y = y + 8
+                if (y >= len(a)):
+                    break
+            #zobrazData(zarizeni)
+            # když používam http api posilam data takhle
+            index += 1
         if (useDZhttp == True):
             posliDataPriZmene(zarizeni)
             last_time = posli_data_5m(akt_time,last_time,tsend,zarizeni)

@@ -22,16 +22,16 @@ lastTUV = 0
 lastRezCer = ""
 
 # ----- domoticz idx ------
-setTVidx = 627
+setTVidx = 676
 actTVidx = 171
-setTUVidx = 628
+setTUVidx = 678
 actTUVidx = 172
 ventStatIdx = 629
 ventOtidx = 633
 cerpTVidx = 630
 cerTUVidx = 631
 podavacidx = 632
-cerpStatidx = 639
+cerpStatidx = 630
 procPaliva = 637
 casPaliva = 638
 tempPodavacidx = 174
