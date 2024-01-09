@@ -60,7 +60,9 @@ class device:
             elif (self.value == 41):
                 request = self.url + "json.htm?type=command&param=udevice&idx=" + str(self.idx) + "&nvalue=0&svalue=Alarm 29"  
             elif (self.value == 33):
-                request = self.url + "json.htm?type=command&param=udevice&idx=" + str(self.idx) + "&nvalue=0&svalue=Dohorely"  
+                request = self.url + "json.htm?type=command&param=udevice&idx=" + str(self.idx) + "&nvalue=0&svalue=Dohorely"
+              elif (self.value == 31):
+                request = self.url + "json.htm?type=command&param=udevice&idx=" + str(self.idx) + "&nvalue=0&svalue=Roztopeni"
             else:
                 request = self.url + "json.htm?type=command&param=udevice&idx=" + str(self.idx) + "&nvalue=0&svalue=Alarm: "  + str(self.value)
         return request
